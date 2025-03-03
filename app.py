@@ -15,12 +15,13 @@ st.set_page_config(page_title="AI-Based Notes Reader", layout="centered")
 def load_spacy_model():
     model_name = "en_core_web_sm"
     try:
-        return spacy.load(model_name, disable=["parser", "ner"])
+        return spacy.load(model_name, disable=["ner"])  # ✅ Enable the parser
     except OSError:
         subprocess.run(["python", "-m", "spacy", "download", model_name], check=True)
-        return spacy.load(model_name, disable=["parser", "ner"])
+        return spacy.load(model_name, disable=["ner"])  # ✅ Enable the parser
 
 nlp = load_spacy_model()
+
 
 # Load summarization model
 @st.cache_resource
