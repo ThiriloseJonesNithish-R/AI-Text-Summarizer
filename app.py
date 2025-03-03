@@ -2,23 +2,24 @@ import streamlit as st
 import spacy
 import torch
 import re
+import subprocess
 from transformers import pipeline
 from gtts import gTTS
 import os
 
-# Ensure SpaCy model is downloaded
+# Ensure SpaCy model is installed
 @st.cache_resource
 def load_spacy_model():
+    model_name = "en_core_web_sm"
     try:
-        return spacy.load("en_core_web_sm", disable=["parser", "ner"])
+        return spacy.load(model_name, disable=["parser", "ner"])
     except OSError:
-        import spacy.cli
-        spacy.cli.download("en_core_web_sm")
-        return spacy.load("en_core_web_sm", disable=["parser", "ner"])
+        subprocess.run(["python", "-m", "spacy", "download", model_name], check=True)
+        return spacy.load(model_name, disable=["parser", "ner"])
 
 nlp = load_spacy_model()
 
-# Load summarization model efficiently
+# Load summarization model
 @st.cache_resource
 def load_summarizer():
     device = 0 if torch.cuda.is_available() else -1
