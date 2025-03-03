@@ -6,13 +6,16 @@ from gtts import gTTS
 import os
 import subprocess
 
-# ✅ Ensure Spacy Model is Installed Before Loading
+# ✅ Ensure Spacy Model is Installed
 def install_models():
     try:
-        spacy.load("en_core_web_sm")  # Try loading the model
+        spacy.load("en_core_web_sm")  # Check if model exists
     except OSError:
         st.warning("Downloading Spacy model: en_core_web_sm...")
-        subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
+        result = subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], capture_output=True, text=True)
+        if result.returncode != 0:
+            st.error(f"Failed to install Spacy model: {result.stderr}")
+            st.stop()
 
 install_models()  # Run this before loading models
 
