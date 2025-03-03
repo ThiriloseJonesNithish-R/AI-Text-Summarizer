@@ -96,9 +96,13 @@ if uploaded_file is not None:
 
 # Convert to Speech
 if st.button("Convert to Speech"):
-    if "summary" in st.session_state:
+    if "summary" in st.session_state and st.session_state["summary"]:  # ✅ Ensure summary exists
         with st.spinner("Generating Audio..."):
             audio_file = text_to_speech(st.session_state["summary"])
             st.audio(audio_file, format="audio/mp3")
+
+        # ✅ Persist summary after speech conversion
+        st.subheader("AI-Generated Summary:")
+        st.write(st.session_state["summary"])
     else:
         st.error("Please generate a summary first!")
