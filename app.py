@@ -1,89 +1,101 @@
 import streamlit as st
 import spacy
 import torch
-import subprocess
+import re
 from transformers import pipeline
 from gtts import gTTS
 import os
 
-# ✅ Ensure Dependencies are Compatible
-subprocess.run(["pip", "install", "--upgrade", "pip"])
-subprocess.run(["pip", "install", "numpy<2"])
-
-# ✅ Ensure Spacy Model is Installed
-def install_models():
-    try:
-        spacy.load("en_core_web_sm")  # Check if model exists
-    except OSError:
-        st.warning("Downloading Spacy model: en_core_web_sm...")
-        result = subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], capture_output=True, text=True)
-        if result.returncode != 0:
-            st.error(f"Failed to install Spacy model: {result.stderr}")
-            st.stop()
-
-install_models()  # Run this before loading models
-
-# ✅ Cache model loading to improve performance
+# Ensure SpaCy model is downloaded
 @st.cache_resource
-def load_models():
+def load_spacy_model():
     try:
-        nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-    except Exception as e:
-        st.error(f"Failed to load Spacy model: {e}")
-        return None, None
-    
+        return spacy.load("en_core_web_sm", disable=["parser", "ner"])
+    except OSError:
+        import spacy.cli
+        spacy.cli.download("en_core_web_sm")
+        return spacy.load("en_core_web_sm", disable=["parser", "ner"])
+
+nlp = load_spacy_model()
+
+# Load summarization model efficiently
+@st.cache_resource
+def load_summarizer():
     device = 0 if torch.cuda.is_available() else -1
-    try:
-        summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device=device)
-    except Exception as e:
-        st.error(f"Failed to load transformers model: {e}")
-        return None, None
+    return pipeline("summarization", model="facebook/bart-large-cnn", device=device)
 
-    return nlp, summarizer
+summarizer = load_summarizer()
 
-nlp, summarizer = load_models()
+# Function to clean text
+def clean_text(text):
+    return re.sub(r'[^a-zA-Z0-9.,!? ]+', '', text).strip()
 
-if nlp is None or summarizer is None:
-    st.error("Model loading failed. Please check logs.")
-    st.stop()
+# Efficient sentence segmentation
+def segment_text(text):
+    return " ".join([sent.text for sent in nlp(text).sents])
 
-# ✅ Initialize Session State
-if "summary" not in st.session_state:
-    st.session_state.summary = None
+# Generate summary with caching
+@st.cache_data
+def generate_summary(text, max_length=150, min_length=50):
+    return summarizer(text, max_length=max_length, min_length=min_length, do_sample=False)[0]['summary_text']
 
-# ✅ UI: Streamlit App
-st.title("AI-Based Text Summarizer & Speech Converter")
-st.write("Upload a text file to summarize and listen.")
+# Convert text to speech
+def text_to_speech(text):
+    audio_path = "summary_audio.mp3"
+    tts = gTTS(text=text, lang="en")
+    tts.save(audio_path)
+    return audio_path
 
+# Streamlit UI
+st.set_page_config(page_title="AI-Based Notes Reader", layout="centered")
+
+st.markdown(
+    """
+    <style>
+    body, .stApp { background: radial-gradient(circle, #0E1A40, #000000); color: white; }
+    .stButton>button {
+        background-color: silver !important; color: black !important; border-radius: 8px;
+        padding: 10px; font-size: 16px; transition: 0.3s;
+    }
+    .stButton>button:hover { background-color: gray !important; color: white !important; }
+    .title { text-align: center; font-size: 2.5em; font-weight: bold; }
+    .subtitle { text-align: center; font-size: 1.5em; }
+    .download-link { text-decoration: none; color: #1F6FEB; font-weight: bold; visibility: hidden; }
+    .download-link:hover, .download-link:focus { visibility: visible; text-decoration: underline; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown("<h1 class='title'>AI-Based Notes Reader</h1>", unsafe_allow_html=True)
+st.markdown("<h2 class='subtitle'>Upload your text file to generate a summary and listen to it.</h2>", unsafe_allow_html=True)
+
+# File Upload
 uploaded_file = st.file_uploader("Upload a text file", type=["txt"])
-
-if uploaded_file:
-    text = uploaded_file.read().decode("utf-8").strip()
-
-    if len(text) < 10:
-        st.error("File content is too short to summarize.")
+if uploaded_file is not None:
+    if uploaded_file.size > 500000:  # Limit file size to 500 KB
+        st.error("File too large! Please upload a smaller file.")
     else:
-        if st.button("Summarize"):
+        text = uploaded_file.read().decode("utf-8")
+        text = clean_text(text)
+        text = segment_text(text)
+
+        # Generate Summary Button
+        if st.button("Generate Summary"):
             with st.spinner("Summarizing..."):
-                try:
-                    st.session_state.summary = summarizer(text, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
-                    st.subheader("Summary")
-                    st.write(st.session_state.summary)
-                    
-                    # ✅ Download Summary
-                    st.download_button("Download Summary", st.session_state.summary, file_name="summary.txt", mime="text/plain")
-                except Exception as e:
-                    st.error(f"Summarization error: {e}")
+                summary = generate_summary(text)
+                st.session_state["summary"] = summary  # Store in session state
+                st.subheader("AI-Generated Summary:")
+                st.write(summary)
 
-# ✅ Convert to Speech (Now Works Properly)
+                # Download Summary Button
+                st.download_button(label="Download Summary", data=summary, file_name="summary.txt", mime="text/plain")
+
+# Convert to Speech
 if st.button("Convert to Speech"):
-    if st.session_state.summary:  # ✅ Now it persists across interactions
+    if "summary" in st.session_state:
         with st.spinner("Generating Audio..."):
-            try:
-                audio_path = "summary_audio.mp3"
-                gTTS(st.session_state.summary, lang="en").save(audio_path)
-                st.audio(audio_path, format="audio/mp3")
-            except Exception as e:
-                st.error(f"Text-to-speech error: {e}")
+            audio_file = text_to_speech(st.session_state["summary"])
+            st.audio(audio_file, format="audio/mp3")
     else:
-        st.warning("Please generate a summary first before converting to speech.")
+        st.error("Please generate a summary first!")
