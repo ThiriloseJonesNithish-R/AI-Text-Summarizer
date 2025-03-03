@@ -1,5 +1,4 @@
 import streamlit as st
-import nltk
 import spacy
 import re
 import torch
@@ -18,7 +17,7 @@ def load_models():
         nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
     
     # Load summarizer only if GPU/CPU supports it
-    device = 0 if torch.cuda.is_available() else -1
+    device = 0 if torch.cuda.is_available() else -1  # Use GPU if available
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device=device)
     
     return nlp, summarizer
@@ -71,6 +70,8 @@ st.markdown("<h2 class='subtitle'>Upload your text file to generate a summary an
 
 # File Upload with Size Limit
 uploaded_file = st.file_uploader("Upload a text file", type=["txt"])
+summary = None  # Initialize summary variable
+
 if uploaded_file is not None:
     if uploaded_file.size > 500000:  # Limit file size to 500 KB
         st.error("File too large! Please upload a smaller file.")
@@ -89,8 +90,8 @@ if uploaded_file is not None:
                 # Download Summary (Served as a downloadable text file)
                 st.download_button(label="Download Summary", data=summary, file_name="summary.txt", mime="text/plain")
 
-        # Convert summary to speech only after it's generated
-        if st.button("Convert to Speech"):
-            with st.spinner("Generating Audio... "):
-                audio_file = text_to_speech(summary)
-                st.audio(audio_file, format="audio/mp3")
+# Convert summary to speech only after it's generated
+if summary and st.button("Convert to Speech"):
+    with st.spinner("Generating Audio... "):
+        audio_file = text_to_speech(summary)
+        st.audio(audio_file, format="audio/mp3")
