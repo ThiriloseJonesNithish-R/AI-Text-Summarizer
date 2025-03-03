@@ -5,6 +5,7 @@ import re
 from transformers import pipeline
 from gtts import gTTS
 import os
+os.system("pip install --upgrade torch torchvision torchaudio")
 
 # Download necessary NLP models
 nltk.download('punkt')
