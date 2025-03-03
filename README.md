@@ -1,6 +1,8 @@
 # AI-Based Notes Reader  
 A smart **text summarization and text-to-speech (TTS) tool** built with **Streamlit, Transformers, PyTorch, spaCy, and gTTS**.  
 
+🚀 **Live Demo:** [Click here to try the app](https://ai-text-summarizer-gpkvame6q4ybu72mhb95wx.streamlit.app/)  
+
 ## 🚀 Features  
 ✅ Upload a `.txt` file and get an **AI-powered summary**  
 ✅ Uses **BERT-based NLP models** for accurate text summarization  
@@ -18,7 +20,35 @@ A smart **text summarization and text-to-speech (TTS) tool** built with **Stream
 
 ## 📌 Installation & Setup  
 ### **1️⃣ Clone the Repository**  
-```bash
-git clone https://github.com/your-username/AI-Notes-Reader.git
-cd AI-Notes-Reader
 
+git clone https://github.com/ThiriloseJonesNithish-R/AI-Text-Summarizer.git
+cd AI-Text-Summarizer
+
+
+### **2️⃣ Install Dependencies**  
+
+pip install -r requirements.txt
+
+
+### **3️⃣ Run the App**  
+
+streamlit run app.py
+
+## 📜 How It Works  
+1️⃣ Upload a `.txt` file 📄  
+2️⃣ Get an AI-generated summary ✂  
+3️⃣ Convert the summary into speech 🔊  
+4️⃣ Download the summary as a text file 📥  
+
+## 📬 Contributing  
+Feel free to **fork this repository** and contribute! Create a pull request with your improvements.  
+
+## 📌 License  
+This project is **open-source** under the MIT License.  
+
+### 🌟 **Star this repo** if you found it helpful! ⭐  
+```
+
+---
+
+This is **one single file**, formatted properly for GitHub. Just **paste it into your `README.md` file**, and you're good to go! 🚀
