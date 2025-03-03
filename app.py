@@ -4,31 +4,32 @@ import torch
 from transformers import pipeline
 from gtts import gTTS
 import os
+import subprocess
 
-# ✅ Fix: Ensure models are installed before loading
+# ✅ Ensure Spacy Model is Installed Before Loading
 def install_models():
     try:
-        spacy.load("en_core_web_sm")
+        spacy.load("en_core_web_sm")  # Try loading the model
     except OSError:
-        import spacy.cli
-        spacy.cli.download("en_core_web_sm")
+        st.warning("Downloading Spacy model: en_core_web_sm...")
+        subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
 
-install_models()
+install_models()  # Run this before loading models
 
-# ✅ Fix: Cache model loading for better performance
+# ✅ Cache model loading to improve performance
 @st.cache_resource
 def load_models():
     try:
         nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
     except Exception as e:
-        st.error(f"Error loading Spacy model: {e}")
+        st.error(f"Failed to load Spacy model: {e}")
         return None, None
     
     device = 0 if torch.cuda.is_available() else -1
     try:
         summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device=device)
     except Exception as e:
-        st.error(f"Error loading Transformers model: {e}")
+        st.error(f"Failed to load transformers model: {e}")
         return None, None
 
     return nlp, summarizer
@@ -36,7 +37,7 @@ def load_models():
 nlp, summarizer = load_models()
 
 if nlp is None or summarizer is None:
-    st.error("Failed to load models. Please check logs for details.")
+    st.error("Model loading failed. Please check logs.")
     st.stop()
 
 # ✅ UI: Streamlit App
