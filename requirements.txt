@@ -2,10 +2,10 @@ streamlit==1.42.2
 nltk==3.9.1
 spacy==3.8.4
 torch==2.0.1
-transformers==4.49.0
+transformers==4.38.2  # Use a stable version instead of 4.49.0
 gTTS==2.5.4
-numpy<2  # ✅ Fix NumPy version issue
-en-core-web-sm==3.8.0  # ✅ Ensure Spacy model is included
+numpy<2  # ✅ Prevents NumPy 2.x issue
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 torch
 torchvision
 torchaudio
