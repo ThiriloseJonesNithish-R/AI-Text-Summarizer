@@ -47,8 +47,3 @@ Feel free to **fork this repository** and contribute! Create a pull request with
 This project is **open-source** under the MIT License.  
 
 ### 🌟 **Star this repo** if you found it helpful! ⭐  
-```
-
----
-
-This is **one single file**, formatted properly for GitHub. Just **paste it into your `README.md` file**, and you're good to go! 🚀
