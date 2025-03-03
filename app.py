@@ -84,24 +84,34 @@ if uploaded_file is not None:
         text = segment_text(text)
 
         # Generate Summary Button
-        if st.button("Generate Summary"):
-            with st.spinner("Summarizing..."):
-                summary = generate_summary(text)
-                st.session_state["summary"] = summary  # Store in session state
-                st.subheader("AI-Generated Summary:")
-                st.write(summary)
+if st.button("Generate Summary"):
+    with st.spinner("Summarizing..."):
+        summary = generate_summary(text)
+        st.session_state["summary"] = summary  # ✅ Store in session state
+        st.subheader("AI-Generated Summary:")
+        st.write(summary)
 
-                # Download Summary Button
-                st.download_button(label="Download Summary", data=summary, file_name="summary.txt", mime="text/plain")
+# ✅ Display the summary & download button after it's generated
+if "summary" in st.session_state and st.session_state["summary"]:
+    st.subheader("AI-Generated Summary:")
+    st.write(st.session_state["summary"])
 
-# Convert to Speech
+    # ✅ Ensure download button appears after summary is generated
+    st.download_button(
+        label="Download Summary",
+        data=st.session_state["summary"],
+        file_name="summary.txt",
+        mime="text/plain"
+    )
+
+# Convert to Speech Button
 if st.button("Convert to Speech"):
-    if "summary" in st.session_state and st.session_state["summary"]:  # ✅ Ensure summary exists
+    if "summary" in st.session_state and st.session_state["summary"]:
         with st.spinner("Generating Audio..."):
             audio_file = text_to_speech(st.session_state["summary"])
             st.audio(audio_file, format="audio/mp3")
 
-        # ✅ Persist summary after speech conversion
+        # ✅ Persist summary after conversion
         st.subheader("AI-Generated Summary:")
         st.write(st.session_state["summary"])
     else:
