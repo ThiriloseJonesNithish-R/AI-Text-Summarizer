@@ -6,8 +6,7 @@ from transformers import pipeline
 from gtts import gTTS
 import os
 
-# Ensure models are available before use
-@st.cache_resource
+# Load models once (WITHOUT caching to avoid UnboundLocalError)
 def load_models():
     try:
         nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])  # Disable unused components
@@ -22,6 +21,7 @@ def load_models():
     
     return nlp, summarizer
 
+# Call load_models without caching to avoid errors
 nlp, summarizer = load_models()
 
 # Function to clean text efficiently
@@ -32,7 +32,7 @@ def clean_text(text):
 def segment_text(text):
     return " ".join([sent.text for sent in nlp(text).sents])
 
-# Generate summary only when needed
+# Generate summary only when needed (with caching)
 @st.cache_data
 def generate_summary(text, max_length=150, min_length=50):
     return summarizer(text, max_length=max_length, min_length=min_length, do_sample=False)[0]['summary_text']
@@ -47,26 +47,8 @@ def text_to_speech(text):
 # Streamlit UI with Optimized Performance
 st.set_page_config(page_title="AI-Based Notes Reader", layout="centered")
 
-st.markdown(
-    """
-    <style>
-    body, .stApp { background: radial-gradient(circle, #0E1A40, #000000); color: white; }
-    .stButton>button {
-        background-color: silver !important; color: black !important; border-radius: 8px;
-        padding: 10px; font-size: 16px; transition: 0.3s;
-    }
-    .stButton>button:hover { background-color: gray !important; color: white !important; }
-    .title { text-align: center; font-size: 2.5em; font-weight: bold; }
-    .subtitle { text-align: center; font-size: 1.5em; }
-    .download-link { text-decoration: none; color: #1F6FEB; font-weight: bold; visibility: hidden; }
-    .download-link:hover, .download-link:focus { visibility: visible; text-decoration: underline; }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown("<h1 class='title'>AI-Based Notes Reader</h1>", unsafe_allow_html=True)
-st.markdown("<h2 class='subtitle'>Upload your text file to generate a summary and listen to it.</h2>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>AI-Based Notes Reader</h1>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center;'>Upload your text file to generate a summary and listen to it.</h2>", unsafe_allow_html=True)
 
 # File Upload with Size Limit
 uploaded_file = st.file_uploader("Upload a text file", type=["txt"])
