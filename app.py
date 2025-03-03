@@ -7,6 +7,9 @@ from transformers import pipeline
 from gtts import gTTS
 import os
 
+# ✅ Ensure this is the FIRST Streamlit command
+st.set_page_config(page_title="AI-Based Notes Reader", layout="centered")
+
 # Ensure SpaCy model is installed
 @st.cache_resource
 def load_spacy_model():
@@ -48,8 +51,6 @@ def text_to_speech(text):
     return audio_path
 
 # Streamlit UI
-st.set_page_config(page_title="AI-Based Notes Reader", layout="centered")
-
 st.markdown(
     """
     <style>
