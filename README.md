@@ -22,6 +22,7 @@ A smart **text summarization and text-to-speech (TTS) tool** built with **Stream
 ### **1️⃣ Clone the Repository**  
 
 git clone https://github.com/ThiriloseJonesNithish-R/AI-Text-Summarizer.git
+
 cd AI-Text-Summarizer
 
 
